@@ -1,0 +1,207 @@
+=== ETAPA 6: DADOS FALTANTES ===
+
+--- application ---
+OCCUPATION_TYPE    134203
+
+--- credit ---
+Series([], )
+(nenhuma coluna com nulo em credit, exceto o que aparecer acima)
+
+=== ETAPA 7: DUPLICIDADES ===
+application.duplicated().sum() = 0
+credit.duplicated().sum() = 0
+application['ID'].duplicated().sum() = 47
+
+credit.groupby('ID').size().describe():
+count    45985.000000
+mean        22.802544
+std         15.492771
+min          1.000000
+25%         10.000000
+50%         19.000000
+75%         34.000000
+max         61.000000
+
+Linhas de application com ID duplicado (todas as ocorrencias): 94
+             ID CODE_GENDER FLAG_OWN_CAR FLAG_OWN_REALTY  CNT_CHILDREN  AMT_INCOME_TOTAL      NAME_INCOME_TYPE            NAME_EDUCATION_TYPE    NAME_FAMILY_STATUS  NAME_HOUSING_TYPE  DAYS_BIRTH  DAYS_EMPLOYED  FLAG_MOBIL  FLAG_WORK_PHONE  FLAG_PHONE  FLAG_EMAIL        OCCUPATION_TYPE  CNT_FAM_MEMBERS
+425023  7022197           F            N               Y             0          450000.0  Commercial associate               Higher education             Separated  House / apartment      -19813          -1799           1                0           0           1                    NaN              1.0
+426818  7022197           M            Y               Y             3          135000.0               Working  Secondary / secondary special               Married  House / apartment      -11945           -735           1                0           0           1               Laborers              5.0
+431911  7022327           M            Y               Y             0          256500.0  Commercial associate               Higher education               Married  House / apartment      -21503          -1674           1                0           0           1             Core staff              2.0
+431545  7022327           F            N               Y             0          135000.0  Commercial associate  Secondary / secondary special  Single / not married  House / apartment      -14771          -5298           1                0           0           0  High skill tech staff              1.0
+425486  7023108           M            Y               Y             1           67500.0               Working  Secondary / secondary special               Married  House / apartment      -15156          -1696           1                1           0           0             Core staff              3.0
+426488  7023108           F            N               N             0          135000.0               Working  Secondary / secondary special               Married  House / apartment      -17590          -1273           1                0           0           0         Cleaning staff              2.0
+425306  7023651           F            N               N             0          225000.0  Commercial associate              Incomplete higher  Single / not married  House / apartment      -10229          -1209           1                0           0           0            Accountants              1.0
+421907  7023651           M            Y               N             1          157500.0  Commercial associate              Incomplete higher               Married  House / apartment      -10521          -1457           1                0           0           0                Drivers              3.0
+427778  7024111           M            N               N             2          157500.0  Commercial associate  Secondary / secondary special        Civil marriage  House / apartment      -15270           -117           1                1           0           0                Drivers              4.0
+432643  7024111           F            N               Y             0          180000.0               Working  Secondary / secondary special               Married  House / apartment      -22041          -1524           1                1           1           0            Accountants              2.0
+
+Apos remover duplicatas EXATAS de linha inteira, sobram com ID repetido: 47 IDs
+application antes de dropar linha-duplicada-exata: (438557, 18)
+application depois: (438557, 18)
+
+=== ETAPA 8: STATUS DE CREDITO ===
+STATUS
+0    383120
+1     11090
+2       868
+3       320
+4       223
+5      1693
+C    442031
+X    209230
+MONTHS_BALANCE min=-60, max=0
+Legenda usada: {'C': 'quitado no mes', 'X': 'sem emprestimo no mes', '0': 'regular (em dia)', '1': 'atraso 1-29 dias', '2': 'atraso 30-59 dias', '3': 'atraso 60-89 dias', '4': 'atraso 90-119 dias', '5': 'atraso 120+ dias / prejuizo'}
+
+=== ETAPA 9: DEFINICAO DO TARGET ===
+Regra: risco=1 se o cliente teve pelo menos 1 mes com STATUS em {2,3,4,5} (atraso >= 30 dias) em todo o historico observado. risco=0 caso contrario.
+
+Contagem de classes:
+target
+0    45318
+1      667
+
+Proporcao de classes:
+target
+0    0.9855
+1    0.0145
+
+Historico do ID 5002126 (target=1):
+ MONTHS_BALANCE STATUS
+            -55      0
+            -54      0
+            -53      X
+            -52      X
+            -51      1
+            -50      2
+            -49      2
+            -48      3
+            -47      3
+            -46      2
+            -45      C
+            -44      C
+            -43      C
+            -42      C
+            -41      C
+            -40      C
+            -39      C
+            -38      C
+            -37      C
+            -36      C
+            -35      C
+            -34      C
+            -33      C
+            -32      C
+            -31      C
+            -30      C
+            -29      C
+            -28      C
+            -27      C
+            -26      C
+            -25      C
+            -24      C
+            -23      C
+            -22      C
+            -21      C
+            -20      C
+            -19      C
+            -18      C
+            -17      C
+            -16      C
+            -15      C
+            -14      C
+            -13      C
+            -12      C
+            -11      C
+            -10      C
+             -9      C
+             -8      C
+             -7      C
+             -6      C
+             -5      C
+             -4      C
+             -3      C
+             -2      C
+             -1      C
+              0      C
+
+Historico do ID 5002255 (target=1):
+ MONTHS_BALANCE STATUS
+            -37      X
+            -36      0
+            -35      0
+            -34      0
+            -33      0
+            -32      0
+            -31      0
+            -30      0
+            -29      0
+            -28      0
+            -27      0
+            -26      0
+            -25      0
+            -24      0
+            -23      0
+            -22      0
+            -21      0
+            -20      0
+            -19      0
+            -18      0
+            -17      0
+            -16      0
+            -15      0
+            -14      1
+            -13      1
+            -12      0
+            -11      0
+            -10      0
+             -9      0
+             -8      0
+             -7      0
+             -6      0
+             -5      1
+             -4      2
+             -3      0
+             -2      1
+             -1      0
+              0      0
+
+Historico do ID 5001711 (target=0):
+ MONTHS_BALANCE STATUS
+             -3      0
+             -2      0
+             -1      0
+              0      X
+
+Historico do ID 5001712 (target=0):
+ MONTHS_BALANCE STATUS
+            -18      0
+            -17      0
+            -16      0
+            -15      0
+            -14      0
+            -13      0
+            -12      0
+            -11      0
+            -10      0
+             -9      0
+             -8      C
+             -7      C
+             -6      C
+             -5      C
+             -4      C
+             -3      C
+             -2      C
+             -1      C
+              0      C
+
+=== ETAPA 10: MERGE ===
+application_limpo['ID'].duplicated().sum() = 47
+target['ID'].duplicated().sum() = 0
+application: 438557 linhas antes de forcar ID unico -> 438510 depois (removidas 47 linhas com ID repetido nao-exato)
+
+base.shape (apos merge inner) = (36457, 19)
+base['ID'].is_unique = True
+base['target'].isna().sum() = 0
+
+IDs em application_unico sem correspondencia em credit_record (ficaram de fora do merge): 402053
+(Esperado: application_record.csv traz TODOS os solicitantes de cadastro, mas so quem efetivamente tem conta de credito aparece em credit_record.csv — por isso o merge 'inner' reduz bastante a base. Essa e a populacao com dado suficiente pra treinar o modelo.)

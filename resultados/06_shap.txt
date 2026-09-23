@@ -1,0 +1,19 @@
+Modelo explicado: xgboost
+Amostra usada: 200 clientes do teste
+
+Top 15 features por |SHAP| medio (importancia global):
+num__meses_observados                  1.097324
+num__meses_quitado                     0.562468
+num__meses_sem_emprestimo              0.360358
+num__DAYS_BIRTH                        0.259539
+num__DAYS_EMPLOYED                     0.218589
+num__registros_historico               0.184605
+num__AMT_INCOME_TOTAL                  0.134000
+cat__NAME_INCOME_TYPE_Pensioner        0.099330
+cat__FLAG_OWN_CAR_N                    0.082730
+cat__CODE_GENDER_F                     0.071302
+cat__FLAG_OWN_REALTY_N                 0.064882
+num__FLAG_PHONE                        0.056850
+cat__NAME_INCOME_TYPE_State servant    0.046935
+cat__NAME_FAMILY_STATUS_Married        0.040253
+cat__OCCUPATION_TYPE_Sales staff       0.039569

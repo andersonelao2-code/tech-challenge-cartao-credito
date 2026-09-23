@@ -1,0 +1,6 @@
+dados/*.csv
+resultados/*.csv
+resultados/pipelines.pkl
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

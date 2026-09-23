@@ -1,0 +1,48 @@
+=== ETAPA 11: FEATURE ENGINEERING ===
+Features criadas a partir do historico (por cliente):
+- meses_observados: quantos meses distintos de MONTHS_BALANCE o cliente tem
+- registros_historico: quantidade total de linhas de status no historico
+- eventos_risco: quantos meses tiveram status 2/3/4/5 (mesma regra do target, mas aqui como CONTAGEM, nao como flag binaria -- serve de feature, nao e o target)
+- meses_quitado: quantos meses o cliente teve status C (quitado)
+- meses_sem_emprestimo: quantos meses o cliente teve status X
+- proporcao_meses_risco: eventos_risco / registros_historico
+
+Amostra de 'historico':
+     ID  meses_observados  registros_historico  eventos_risco  meses_quitado  meses_sem_emprestimo  proporcao_meses_risco
+5001711                 4                    4              0              0                     1                    0.0
+5001712                19                   19              0              9                     0                    0.0
+5001713                22                   22              0              0                    22                    0.0
+5001714                15                   15              0              0                    15                    0.0
+5001715                60                   60              0              0                    60                    0.0
+
+CHECAGEM DE LEAKAGE: correlacao entre (eventos_risco > 0) e o target = 1.0000
+LEAKAGE CONFIRMADO: eventos_risco foi calculado com a MESMA regra usada pra montar o target (status em {2,3,4,5}) -- e a resposta disfarcada de feature. eventos_risco e proporcao_meses_risco (que depende dele) foram REMOVIDAS do conjunto de features antes do treino. As demais features do historico (meses_observados, registros_historico, meses_quitado, meses_sem_emprestimo) NAO usam a contagem de status de risco e foram mantidas.
+
+base.shape apos juntar cadastro + features de historico + target = (36457, 23)
+Nulos em features de historico (deveria ser 0, pois so entraram IDs que tem credit_record): {'meses_observados': 0, 'registros_historico': 0}
+
+=== ETAPA 12: BALANCEAMENTO DE CLASSES ===
+Contagem:
+target
+0    35841
+1      616
+Proporcao:
+target
+0    0.9831
+1    0.0169
+
+Classe minoritaria (risco=1) e 1.69% da base -- desbalanceamento severo.
+Decisao: NAO usar SMOTE/oversampling. Usar class_weight='balanced' nos modelos que suportam, e avaliar com metricas que nao sejam so accuracy (precision/recall/F1/ROC-AUC). O teste sera mantido com a proporcao REAL (sem balancear), pois precisa representar a populacao real que o modelo vai encontrar em producao.
+
+Baseline ingenuo (sempre prever a classe majoritaria) teria accuracy = 98.31% -- qualquer modelo real precisa ficar claramente acima disso em metricas que enxergam a classe minoritaria (recall/F1/ROC-AUC), nao so accuracy.
+
+=== ETAPA 13: SPLIT TREINO/TESTE ===
+X_treino.shape = (29165, 21), X_teste.shape = (7292, 21)
+Proporcao de classes no treino:
+target
+0    0.9831
+1    0.0169
+Proporcao de classes no teste:
+target
+0    0.9831
+1    0.0169
