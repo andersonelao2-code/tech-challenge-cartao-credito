@@ -1,6 +1,37 @@
-dados/*.csv
-resultados/*.csv
-resultados/pipelines.pkl
+# Dados — nunca versione datasets
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
+!data/**/README.md
+
+# Modelos serializados — são regeneráveis rodando os notebooks
+*.pkl
+*.joblib
+results/models/*
+!results/models/.gitkeep
+
+# PDF de submissão gerado localmente
+submissao/submissao_*.pdf
+
+# Material antigo mantido só localmente
+_legado/
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Ambiente e segredos
+.env
+.env.*
+
+# SO / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

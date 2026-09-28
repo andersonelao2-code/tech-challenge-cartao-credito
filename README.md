@@ -1,95 +1,252 @@
-# Predição de Aprovação de Cartão de Crédito — Tech Challenge Fase 2 (POSTECH/FIAP)
+# Tech Challenge — Fase 2 | POSTECH Data Analytics
 
-Modelo de classificação supervisionada para identificar clientes com maior evidência histórica
-de risco de crédito, a partir de dados cadastrais e de histórico de pagamento.
+**Predição de bons e maus pagadores em pedidos de cartão de crédito com aprendizado de máquina.**
 
-## Pergunta de negócio
+---
 
-Com os dados disponíveis no momento da análise, como identificar clientes com maior evidência
-histórica de risco? O dataset não traz uma coluna pronta de "aprovado/reprovado" — o target foi
-construído a partir do histórico de status de pagamento (ver seção Target).
+## 1. Identificação
 
-## Dados
+| Campo | Valor |
+|---|---|
+| Turma | 12DTAT |
+| Grupo | Grupo 12 |
+| Data de entrega | 08/10/2026 |
 
-- `dados/application_record.csv` — atributos cadastrais (438.557 linhas, 18 colunas).
-- `dados/credit_record.csv` — histórico mensal de status de crédito (1.048.575 linhas, 3 colunas,
-  45.985 clientes únicos).
-- Fonte: fornecida pelo desafio (link no enunciado).
+### Integrantes
 
-## Estrutura
+| Nome completo | RM | E-mail |
+|---|---|---|
+| Anderson Leão da Silva | RM377734 | andersonleao@bb.com.br |
+| Jessika Midory Fukuyama | RM123456 | je.fukuyama@gmail.com |
+| Leticia Nery Barbosa Dias | RM123456 | leticianerybd@gmail.com |
+| Pricilla Teixeira da Silva | RM123456 | pricillateixeira@bb.com.br |
 
-```
-dados/          application_record.csv, credit_record.csv (não versionados — ver .gitignore)
-notebooks/      scripts .py por etapa (01 a 07) + montar_notebook.py + predicao_cartao_credito.ipynb
-resultados/     saídas reais de cada etapa (.txt, .csv, .png, tabela_metricas.csv)
-```
+---
 
-## Como rodar
+## 2. Links da entrega
+
+Estes três links são **obrigatórios** e devem ser idênticos aos do PDF de submissão.
+
+| Item | Link |
+|---|---|
+| Repositório | _a definir: URL pública do GitHub_ |
+| Vídeo executivo (≤ 5 min) | _a definir_ |
+| Apresentação | [`docs/apresentacao_executiva.pdf`](docs/apresentacao_executiva.pdf) |
+
+---
+
+## 3. O problema
+
+Conceder crédito é a atividade central de uma instituição financeira e também a sua maior fonte de
+risco: cada cartão aprovado para um cliente que não paga vira prejuízo. Analisar manualmente todos
+os pedidos é caro e lento, e regras fixas ("renda acima de X") deixam passar padrões que só
+aparecem na combinação de várias características.
+
+Este projeto usa **classificação supervisionada** para estimar, a partir dos dados cadastrais e do
+histórico de crédito, a probabilidade de um cliente ser mau pagador. O objetivo é **ordenar os
+pedidos por risco** e concentrar a análise humana onde ela faz mais diferença.
+
+### Variável alvo
+
+A base não traz uma coluna "aprovado/reprovado". O alvo **`mau_pagador`** foi construído a partir
+do histórico mensal de pagamento (`credit_record.csv`):
+
+> `mau_pagador = 1` quando o cliente teve **pelo menos um mês com atraso de 60 dias ou mais**
+> (`STATUS` 2, 3, 4 ou 5) no histórico observado; `mau_pagador = 0` caso contrário.
+
+**Por que 60 dias**, olhando o pior status já registrado por cliente:
+
+- **Atraso de 1 a 29 dias** é o pior status de **75,4%** dos clientes: é o comportamento comum, não
+  indica risco.
+- **Corte em 30 dias** marcaria **11,6%** dos clientes, incluindo muitos que atrasaram uma única
+  fatura.
+- **Corte em 60 dias** marca **1,45%** dos clientes, que deixaram de pagar pelo menos **duas
+  faturas seguidas**, um sinal de dificuldade financeira real.
+
+Detalhes em `notebooks/02_preprocessamento.ipynb`, seção 3.
+
+**Distribuição das classes na base de modelagem:** 35.841 bons pagadores (98,31%) e 616 maus
+pagadores (1,69%). O desbalanceamento é severo e orienta a escolha de métricas e de modelos.
+
+### Dataset
+
+| Campo | Valor |
+|---|---|
+| Fonte | [link do Tech Challenge (Google Drive)](https://drive.google.com/file/d/1z4yEyiCE_CGCWbvAAZQZSz-5-E5T5eYd/view?usp=sharing), mesma base pública do Kaggle "Credit Card Approval Prediction" |
+| Linhas × colunas | `application_record.csv`: 438.557 × 18 · `credit_record.csv`: 1.048.575 × 3 · base de modelagem: 36.457 × 22 |
+| Período / versão | histórico de até 61 meses por cliente (`MONTHS_BALANCE` de −60 a 0); versão distribuída no Tech Challenge Fase 2 |
+| Licença de uso | uso acadêmico, conforme disponibilizado pela POSTECH/FIAP |
+
+Descrição das variáveis:
+
+| Variável | Tipo | Descrição |
+|---|---|---|
+| `ID` | inteiro | identificador do cliente (liga as duas tabelas) |
+| `CODE_GENDER` | categórica | gênero |
+| `FLAG_OWN_CAR` / `FLAG_OWN_REALTY` | categórica | possui carro / imóvel |
+| `CNT_CHILDREN` | inteiro | número de filhos |
+| `AMT_INCOME_TOTAL` | contínua | renda anual |
+| `NAME_INCOME_TYPE` | categórica | tipo de renda (assalariado, empresário, aposentado, servidor, estudante) |
+| `NAME_EDUCATION_TYPE` | categórica | escolaridade |
+| `NAME_FAMILY_STATUS` | categórica | estado civil |
+| `NAME_HOUSING_TYPE` | categórica | tipo de moradia |
+| `DAYS_BIRTH` | inteiro | idade em dias (negativo) → convertida em `idade_anos` |
+| `DAYS_EMPLOYED` | inteiro | tempo de emprego em dias (negativo; `365243` = sem vínculo) → `anos_empregado` + `sem_vinculo_emprego` |
+| `FLAG_MOBIL` | binária | possui celular (constante, removida) |
+| `FLAG_WORK_PHONE` / `FLAG_PHONE` / `FLAG_EMAIL` | binária | possui telefone comercial / fixo / e-mail |
+| `OCCUPATION_TYPE` | categórica | ocupação (30,6% nulos → categoria `Nao_informado`) |
+| `CNT_FAM_MEMBERS` | contínua | tamanho da família |
+| `MONTHS_BALANCE` | inteiro | mês de referência do histórico (0 = atual, −1 = anterior…) |
+| `STATUS` | categórica | `0` = 1 a 29 dias de atraso · `1` = 30 a 59 · `2` = 60 a 89 · `3` = 90 a 119 · `4` = 120 a 149 · `5` = mais de 150 dias ou prejuízo · `C` = quitado · `X` = sem empréstimo |
+| `meses_observados` | inteiro | *derivada:* meses de histórico do cliente |
+| `meses_quitado` | inteiro | *derivada:* meses com status `C` |
+| `meses_sem_emprestimo` | inteiro | *derivada:* meses com status `X` |
+| `mau_pagador` | binária | **alvo** (ver acima) |
+
+---
+
+## 4. Como reproduzir
 
 ```bash
-pip install pandas numpy matplotlib seaborn scikit-learn xgboost shap nbformat nbclient
-python notebooks/01_leitura_entendimento.py
-python notebooks/02_qualidade_target_merge.py
-python notebooks/03_features_split.py
-python notebooks/04_modelos.py
-python notebooks/05_avaliacao.py
-python notebooks/06_shap.py
-python notebooks/07_interpretacao_negocio.py
-# ou, pra gerar/re-executar o notebook único:
-python notebooks/montar_notebook.py
+git clone <URL_DO_REPOSITORIO>
+cd tech-challenge-cartao-credito
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
 ```
 
-## Target
+Baixe o dataset e coloque `application_record.csv` e `credit_record.csv` em `data/raw/`. Os dados
+**não** são versionados; veja `data/README.md`.
 
-Regra: `risco = 1` se o cliente teve pelo menos um mês com `STATUS` em `{2,3,4,5}` (atraso ≥ 30
-dias) em todo o histórico observado; `risco = 0` caso contrário. É uma hipótese acadêmica
-documentada, não uma política real de negócio.
+Depois execute os notebooks nesta ordem, no Jupyter, no VS Code ou pela linha de comando:
 
-Classes extremamente desbalanceadas: **98,31% bons pagadores / 1,69% com evidência de risco**
-(616 de 36.457 clientes, após o merge).
+| # | Notebook | O que faz |
+|---|---|---|
+| 1 | `notebooks/01_eda.ipynb` | Análise exploratória: distribuições, correlações, outliers, balanceamento |
+| 2 | `notebooks/02_preprocessamento.ipynb` | Nulos, duplicatas, definição do alvo, vazamento, features |
+| 3 | `notebooks/03_modelagem.ipynb` | Split, validação cruzada e treino de 4 modelos |
+| 4 | `notebooks/04_avaliacao.ipynb` | Métricas no teste, priorização, importância de variáveis, conclusões |
 
-## Vazamento de dados encontrado e corrigido
+Execução de todos pela linha de comando, sem abrir o Jupyter:
 
-A primeira versão da feature `eventos_risco` (contagem de meses em atraso) tinha correlação
-**1.0** com o target — porque foi calculada com a mesma regra que define o target. Isso gerou
-acurácia/ROC-AUC = 1.0 artificiais nos 4 modelos, um sinal claro de bug, não de sucesso. A
-feature (e sua derivada `proporcao_meses_risco`) foi removida antes do treino final. Ver
-`resultados/03_features_split.txt` para a checagem e o log completo.
+```bash
+for n in 01_eda 02_preprocessamento 03_modelagem 04_avaliacao; do
+  python -c "import nbformat as f, nbclient as c; nb = f.read('notebooks/$n.ipynb', 4); c.NotebookClient(nb, resources={'metadata': {'path': 'notebooks'}}).execute(); f.write(nb, 'notebooks/$n.ipynb')"
+done
+```
 
-## Modelos e métricas (teste, 7.292 clientes, threshold 0.5)
+**Semente fixa:** `RANDOM_STATE = 42`, declarada na primeira célula de cada notebook e em
+`src/config.py`. Rodar os notebooks na ordem acima, a partir de um ambiente limpo, reproduz
+exatamente os números da seção 5.
 
-| modelo | accuracy | balanced_accuracy | precision | recall | f1 | roc_auc |
+---
+
+## 5. Resultados
+
+Conjunto de teste: 7.292 clientes (20%, estratificado), com 123 maus pagadores. Corte de decisão de 0,5.
+
+| Modelo | Acurácia | Acurácia balanceada | Precisão | Recall | F1 | AUC-ROC |
 |---|---|---|---|---|---|---|
-| logística | 0,7652 | 0,7088 | 0,0457 | 0,6504 | 0,0855 | 0,7922 |
-| árvore | 0,7770 | 0,6788 | 0,0432 | 0,5772 | 0,0803 | 0,7393 |
-| floresta | 0,8829 | 0,6807 | 0,0685 | 0,4715 | 0,1196 | 0,7893 |
-| **xgboost** | 0,8382 | 0,7020 | 0,0577 | 0,5610 | 0,1047 | **0,8096** |
-| baseline (dummy) | 0,9831 | 0,5000 | 0,0000 | 0,0000 | 0,0000 | 0,5000 |
+| **XGBoost** | 0,8442 | **0,7250** | 0,0637 | 0,6016 | 0,1153 | **0,8164** |
+| Regressão Logística | 0,7696 | 0,7150 | 0,0471 | **0,6585** | 0,0879 | 0,7860 |
+| Random Forest | 0,8974 | 0,6602 | **0,0702** | 0,4146 | **0,1200** | 0,7691 |
+| Árvore de Decisão | 0,7770 | 0,6788 | 0,0432 | 0,5772 | 0,0803 | 0,7394 |
+| Baseline (sempre "bom") | 0,9831 | 0,5000 | 0,0000 | 0,0000 | 0,0000 | 0,5000 |
 
-Melhor modelo por ROC-AUC: **XGBoost**. Tabela completa em `resultados/tabela_metricas.csv`.
+Validação cruzada (5 folds, só no treino), AUC-ROC médio ± desvio:
 
-## Variáveis mais relevantes (permutation importance + SHAP, concordam entre si)
+| Modelo | AUC-ROC |
+|---|---|
+| XGBoost | 0,831 ± 0,013 |
+| Random Forest | 0,813 ± 0,015 |
+| Regressão Logística | 0,805 ± 0,011 |
+| Árvore de Decisão | 0,755 ± 0,020 |
 
-1. `meses_observados` — tempo de histórico do cliente
-2. `meses_quitado` — meses com status "quitado" (C)
-3. `meses_sem_emprestimo` — meses com status "sem empréstimo" (X)
-4. `DAYS_BIRTH` — idade
-5. `AMT_INCOME_TOTAL` — renda
+A validação cruzada e o teste ficam próximos (0,831 contra 0,816), sem sinal de overfitting.
 
-**Limitação importante:** `meses_observados` ser a variável mais importante é esperado pela
-própria definição do target (mais tempo observado = mais chances de ter tido um mês ruim) — não
-é vazamento (não usa dado futuro), mas indica que parte do que o modelo aprende é "tempo de
-exposição", não só "perfil de risco intrínseco". Ver `resultados/07_interpretacao_negocio.txt`
-para a discussão completa, incluindo a ressalva de fairness sobre `CODE_GENDER`.
+**Modelo escolhido:** **XGBoost**. Tem o maior AUC-ROC tanto na validação cruzada quanto no teste e
+a maior acurácia balanceada. Também é o que melhor ordena os clientes por risco: revisando os **20%
+de pedidos mais arriscados, encontra 69,1% dos maus pagadores**, contra 20% de uma escolha
+aleatória.
 
-## Limitações e uso responsável
+**Métricas priorizadas:** **AUC-ROC** como principal e **recall** como secundária.
 
-O modelo apoia **priorização de análise**, não deve ser usado para aprovação/rejeição automática
-de crédito. Precision baixa (4-7%) no threshold padrão significa muitos falsos positivos; recall
-de até ~65% significa que ainda escapa cerca de 1 em cada 3 casos de risco real. Nenhum número
-neste projeto foi inventado — todos vêm da execução real da pipeline sobre o dataset fornecido.
+- **Acurácia não serve:** com 98,31% de bons pagadores, o baseline que responde sempre "bom" tem
+  98,31% de acurácia e não encontra ninguém.
+- **AUC-ROC** mede se o modelo coloca os maus pagadores no topo do ranking, independentemente do
+  corte escolhido. É exatamente o uso proposto (priorizar a análise).
+- **Recall** vem logo depois porque, em crédito, deixar passar um mau pagador (falso negativo,
+  perda do valor emprestado) costuma custar mais que mandar um bom pagador para análise (falso
+  positivo).
 
-## Apresentação e vídeo
+Todas as métricas, tabelas e gráficos ficam em `results/metrics/` e `results/figures/`.
 
-Pendente — roteiro de slides e vídeo de até 5 minutos a produzir separadamente (ver documento de
-apresentação completo entregue junto com este repositório).
+---
+
+## 6. Principais conclusões
+
+1. **O modelo encontra os maus pagadores muito melhor que o acaso, mas deve priorizar a análise,
+   não decidir sozinho.** Revisar os 10% de pedidos mais arriscados já encontra metade dos maus
+   pagadores, e os 20% mais arriscados encontram 7 em cada 10. Por outro lado, a precisão é de
+   cerca de 6%: recusar automaticamente todo cliente marcado como risco negaria crédito a cerca de
+   15 bons pagadores para cada mau pagador evitado.
+2. **O histórico com o banco é o que mais prevê o risco.** As três variáveis mais importantes, com
+   concordância entre permutation importance e SHAP, vêm do histórico:
+   - **tempo de histórico:** mais meses aumentam o risco;
+   - **meses com saldo quitado:** reduzem o risco;
+   - **meses sem crédito em uso:** reduzem o risco.
+
+   Entre os dados cadastrais, idade e tempo de emprego maiores indicam risco menor.
+3. **Para solicitantes sem histórico, o modelo é bem mais fraco.** Treinado só com dados
+   cadastrais, o AUC-ROC cai de 0,816 para 0,658, e a captura nos 20% mais arriscados cai de 69% para
+   50%. Para clientes novos, o modelo precisa ser complementado por birôs de crédito externos.
+4. **Nenhuma característica isolada define um mau pagador.** Todas as correlações individuais com
+   o alvo ficam abaixo de 0,03 (exceto o tempo de histórico, com 0,10). O ganho vem da combinação de
+   variáveis, o que justifica um modelo em vez de regras simples.
+5. **A qualidade dos dados exigiu decisões explícitas:**
+   - o código `365243` em `DAYS_EMPLOYED` identifica aposentados sem vínculo (17% da base);
+   - a ocupação é nula em 30,6% dos casos;
+   - há 47 IDs duplicados com dados divergentes;
+   - uma feature com vazamento (correlação 1,0 com o alvo) foi identificada e removida.
+
+### Limitações e próximos passos
+
+- **Tempo de exposição:** a variável mais importante (`meses_observados`) mede em parte há quanto
+  tempo o cliente é observado. Mais tempo significa mais chances de registrar um atraso. Não é
+  vazamento, mas indica que o modelo mistura "cliente antigo" com "cliente arriscado". Próximo
+  passo: exigir um mínimo de meses de histórico ou normalizar pelo tempo de observação.
+- **Janela temporal:** features de histórico e alvo vêm do mesmo período. Em produção, as features
+  deveriam ser calculadas antes de uma data de corte e o alvo medido depois dela.
+- **Equidade:** `CODE_GENDER` influencia a previsão. Antes de qualquer uso real, é necessária uma
+  auditoria de equidade (erros por gênero) e a avaliação de remover a variável.
+- **Corte de decisão e custos:** o corte de 0,5 é didático. Com os custos reais de um calote e de
+  um cliente perdido, dá para escolher o corte que minimiza o prejuízo. Também cabem ajuste de
+  hiperparâmetros e calibração das probabilidades.
+- **Definição do alvo:** o corte de 60 dias é uma hipótese de modelagem. Testar 30 dias, ou uma
+  janela fixa de desempenho, e comparar a estabilidade do modelo.
+
+---
+
+## 7. Estrutura do repositório
+
+```
+.
+├── data/          dados brutos (raw) e tratados (processed) — não versionados
+├── notebooks/     análise em ordem numerada (01 a 04), com saídas salvas
+├── src/           funções reutilizadas pelos notebooks (config, dados, features, modelos, métricas)
+├── results/       figuras e métricas versionadas; modelos regeneráveis (não versionados)
+├── docs/          apresentação executiva
+└── submissao/     geração do PDF de submissão com os três links
+```
+
+Detalhes e convenções em [`ESTRUTURA.md`](ESTRUTURA.md).
+Antes de enviar, percorra o [`CHECKLIST.md`](CHECKLIST.md).
+
+---
+
+## 8. Tecnologias
+
+Python 3.12 · pandas 3.0 · NumPy 2.5 · scikit-learn 1.9 · XGBoost 3.4 · SHAP 0.52 · Matplotlib 3.11 ·
+seaborn 0.13 · joblib · Jupyter (ipykernel / nbclient). Versões exatas em `requirements.txt`.
