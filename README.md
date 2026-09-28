@@ -29,9 +29,9 @@ Estes três links são **obrigatórios** e devem ser idênticos aos do PDF de su
 
 | Item | Link |
 |---|---|
-| Repositório | _a definir: URL pública do GitHub_ |
+| Repositório | <https://github.com/andersonelao2-code/tech-challenge-cartao-credito> |
 | Vídeo executivo (≤ 5 min) | _a definir_ |
-| Apresentação | [`docs/apresentacao_executiva.pdf`](docs/apresentacao_executiva.pdf) |
+| Apresentação | <https://github.com/andersonelao2-code/tech-challenge-cartao-credito/blob/main/docs/apresentacao_executiva.pdf> |
 
 ---
 
@@ -108,7 +108,7 @@ Descrição das variáveis:
 ## 4. Como reproduzir
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/andersonelao2-code/tech-challenge-cartao-credito.git
 cd tech-challenge-cartao-credito
 
 python -m venv .venv

@@ -2,14 +2,26 @@
   "turma": "12DTAT",
   "grupo": "Grupo 12",
   "integrantes": [
-    { "nome": "Anderson Leão da Silva", "rm": "RM377734" },
-    { "nome": "Jessika Midory Fukuyama", "rm": "RM123456" },
-    { "nome": "Leticia Nery Barbosa Dias", "rm": "RM123456" },
-    { "nome": "Pricilla Teixeira da Silva", "rm": "RM123456" }
+    {
+      "nome": "Anderson Leão da Silva",
+      "rm": "RM377734"
+    },
+    {
+      "nome": "Jessika Midory Fukuyama",
+      "rm": "RM123456"
+    },
+    {
+      "nome": "Leticia Nery Barbosa Dias",
+      "rm": "RM123456"
+    },
+    {
+      "nome": "Pricilla Teixeira da Silva",
+      "rm": "RM123456"
+    }
   ],
   "links": {
-    "repositorio": "https://github.com/usuario/nome-do-repositorio",
+    "repositorio": "https://github.com/andersonelao2-code/tech-challenge-cartao-credito",
     "video": "https://www.youtube.com/watch?v=xxxxxxxxxxx",
-    "apresentacao": "https://github.com/usuario/nome-do-repositorio/blob/main/docs/apresentacao_executiva.pdf"
+    "apresentacao": "https://github.com/andersonelao2-code/tech-challenge-cartao-credito/blob/main/docs/apresentacao_executiva.pdf"
   }
 }
