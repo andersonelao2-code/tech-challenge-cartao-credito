@@ -2,10 +2,11 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedGroupKFold, train_test_split
 
 from src.config import (
     DIAS_EMPREGO_SENTINELA,
+    GROUP,
     RANDOM_STATE,
     STATUS_ATRASO_60_MAIS,
     TARGET,
@@ -33,10 +34,25 @@ def remove_duplicate_ids(application: pd.DataFrame) -> pd.DataFrame:
     return application.drop_duplicates(subset="ID", keep="first").reset_index(drop=True)
 
 
+def add_client_group(application: pd.DataFrame) -> pd.DataFrame:
+    """Marca com o mesmo grupo_cliente os IDs que têm o cadastro inteiro idêntico.
+
+    A base registra a mesma pessoa com vários IDs (um por conta/cartão): todas as
+    colunas cadastrais coincidem, inclusive a data de nascimento em dias. Se essas
+    cópias caírem uma no treino e outra no teste, o modelo é avaliado em quem ele
+    já viu. O grupo serve para manter cada pessoa inteira de um lado só do split.
+    Precisa ser calculado antes de build_features, que arredonda idade e emprego.
+    """
+    df = application.copy()
+    colunas = [c for c in df.columns if c != "ID"]
+    df[GROUP] = df.groupby(colunas, dropna=False, sort=False).ngroup()
+    return df
+
+
 def build_target(credit: pd.DataFrame) -> pd.DataFrame:
     """Uma linha por cliente com o alvo binário.
 
-    mau_pagador = 1 se o cliente teve pelo menos um mês com atraso de 30 dias
+    mau_pagador = 1 se o cliente teve pelo menos um mês com atraso de 60 dias
     ou mais (STATUS 2, 3, 4 ou 5) no histórico observado; 0 caso contrário.
     """
     atraso = credit["STATUS"].isin(STATUS_ATRASO_60_MAIS)
@@ -101,8 +117,27 @@ def build_features(application: pd.DataFrame) -> pd.DataFrame:
 
 
 def split(df: pd.DataFrame):
-    """Split estratificado treino/teste, idêntico em todos os notebooks."""
-    X = df.drop(columns=[TARGET, "ID"])
+    """Split treino/teste por pessoa, estratificado, idêntico em todos os notebooks.
+
+    Usa a primeira dobra de um StratifiedGroupKFold com 1/TEST_SIZE dobras (20% de
+    teste): todos os IDs da mesma pessoa (grupo_cliente) ficam do mesmo lado e a
+    proporção de maus pagadores é preservada.
+    """
+    X = df.drop(columns=[TARGET, "ID", GROUP])
+    y = df[TARGET]
+    cv = StratifiedGroupKFold(n_splits=round(1 / TEST_SIZE), shuffle=True,
+                              random_state=RANDOM_STATE)
+    treino, teste = next(cv.split(X, y, groups=df[GROUP]))
+    return X.iloc[treino], X.iloc[teste], y.iloc[treino], y.iloc[teste]
+
+
+def split_aleatorio(df: pd.DataFrame):
+    """Split 80/20 por linha, ignorando as pessoas repetidas.
+
+    Só para comparação: mostra quanto a avaliação fica otimista quando a mesma
+    pessoa pode cair no treino e no teste.
+    """
+    X = df.drop(columns=[TARGET, "ID", GROUP])
     y = df[TARGET]
     return train_test_split(
         X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE

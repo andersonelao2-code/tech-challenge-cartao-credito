@@ -24,6 +24,7 @@ APPLICATION_FILE = DATA_RAW / "application_record.csv"   # cadastro dos solicita
 CREDIT_FILE = DATA_RAW / "credit_record.csv"             # histórico mensal de crédito
 PROCESSED_FILE = "base_modelagem"                         # saída do notebook 02
 TARGET = "mau_pagador"                                    # 1 = mau pagador, 0 = bom pagador
+GROUP = "grupo_cliente"                                   # mesma pessoa = mesmo perfil cadastral (vários IDs)
 
 # Códigos de STATUS do credit_record que indicam atraso de 60 dias ou mais
 # (legenda oficial: 0 = 1-29 dias, 1 = 30-59, 2 = 60-89, 3 = 90-119, 4 = 120-149,

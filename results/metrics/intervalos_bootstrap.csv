@@ -1,0 +1,13 @@
+,,ic95_inferior,ic95_superior
+Regressão Logística,roc_auc,0.7439,0.8309
+Regressão Logística,recall,0.5691,0.736
+Regressão Logística,precision,0.0383,0.0591
+Árvore de Decisão,roc_auc,0.6982,0.7887
+Árvore de Decisão,recall,0.6296,0.7913
+Árvore de Decisão,precision,0.027,0.0404
+Random Forest,roc_auc,0.709,0.7906
+Random Forest,recall,0.2523,0.4109
+Random Forest,precision,0.0469,0.0854
+XGBoost,roc_auc,0.7572,0.8314
+XGBoost,recall,0.4552,0.6261
+XGBoost,precision,0.0429,0.0684

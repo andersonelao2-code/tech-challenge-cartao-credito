@@ -1,3 +1,5 @@
-,accuracy,balanced_accuracy,precision,recall,f1,roc_auc,captura_top_20%
-XGBoost — cadastro + histórico,0.8442,0.725,0.0637,0.6016,0.1153,0.8164,0.6911
-XGBoost — só cadastro,0.8157,0.6466,0.0434,0.4715,0.0795,0.6579,0.4959
+modelo,roc_auc_cadastro_e_historico,roc_auc_so_cadastro,captura_top_20%_cadastro_e_historico,captura_top_20%_so_cadastro
+Regressão Logística,0.788,0.5852,0.5968,0.2823
+Árvore de Decisão,0.7448,0.5536,0.4919,0.1613
+Random Forest,0.7497,0.5746,0.5403,0.3065
+XGBoost,0.7965,0.5921,0.6371,0.371

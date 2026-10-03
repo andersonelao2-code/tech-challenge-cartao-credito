@@ -73,7 +73,7 @@ pagadores (1,69%). O desbalanceamento é severo e orienta a escolha de métricas
 | Campo | Valor |
 |---|---|
 | Fonte | [link do Tech Challenge (Google Drive)](https://drive.google.com/file/d/1z4yEyiCE_CGCWbvAAZQZSz-5-E5T5eYd/view?usp=sharing), mesma base pública do Kaggle "Credit Card Approval Prediction" |
-| Linhas × colunas | `application_record.csv`: 438.557 × 18 · `credit_record.csv`: 1.048.575 × 3 · base de modelagem: 36.457 × 22 |
+| Linhas × colunas | `application_record.csv`: 438.557 × 18 · `credit_record.csv`: 1.048.575 × 3 · base de modelagem: 36.457 × 23 (36.457 contas de 9.728 pessoas) |
 | Período / versão | histórico de até 61 meses por cliente (`MONTHS_BALANCE` de −60 a 0); versão distribuída no Tech Challenge Fase 2 |
 | Licença de uso | uso acadêmico, conforme disponibilizado pela POSTECH/FIAP |
 
@@ -101,6 +101,7 @@ Descrição das variáveis:
 | `meses_observados` | inteiro | *derivada:* meses de histórico do cliente |
 | `meses_quitado` | inteiro | *derivada:* meses com status `C` |
 | `meses_sem_emprestimo` | inteiro | *derivada:* meses com status `X` |
+| `grupo_cliente` | inteiro | *derivada:* identifica a pessoa (IDs com cadastro 100% idêntico); usada só para separar treino e teste, nunca como variável do modelo |
 | `mau_pagador` | binária | **alvo** (ver acima) |
 
 ---
@@ -125,9 +126,9 @@ Depois execute os notebooks nesta ordem, no Jupyter, no VS Code ou pela linha de
 | # | Notebook | O que faz |
 |---|---|---|
 | 1 | `notebooks/01_eda.ipynb` | Análise exploratória: distribuições, correlações, outliers, balanceamento |
-| 2 | `notebooks/02_preprocessamento.ipynb` | Nulos, duplicatas, definição do alvo, vazamento, features |
-| 3 | `notebooks/03_modelagem.ipynb` | Split, validação cruzada e treino de 4 modelos |
-| 4 | `notebooks/04_avaliacao.ipynb` | Métricas no teste, priorização, importância de variáveis, conclusões |
+| 2 | `notebooks/02_preprocessamento.ipynb` | Nulos, duplicatas, pessoas repetidas, definição do alvo, vazamento, features |
+| 3 | `notebooks/03_modelagem.ipynb` | Split e validação cruzada por pessoa, efeito das pessoas repetidas, treino de 4 modelos |
+| 4 | `notebooks/04_avaliacao.ipynb` | Métricas no teste com intervalo de confiança, priorização, cenário só cadastro, importância de variáveis, conclusões |
 
 Execução de todos pela linha de comando, sem abrir o Jupyter:
 
@@ -145,36 +146,49 @@ exatamente os números da seção 5.
 
 ## 5. Resultados
 
-Conjunto de teste: 7.292 clientes (20%, estratificado), com 123 maus pagadores. Corte de decisão de 0,5.
+**Treino e teste separados por pessoa.** A base registra a mesma pessoa com vários IDs (uma conta
+por cartão): os 36.457 IDs pertencem a só 9.728 pessoas. Num split aleatório, 89% do teste teria a
+mesma pessoa no treino, e o modelo seria avaliado em quem ele já viu. Por isso o split e a
+validação cruzada usam `StratifiedGroupKFold` por `grupo_cliente`: todos os IDs de uma pessoa ficam
+do mesmo lado (`notebooks/02_preprocessamento.ipynb`, seção 7).
+
+Conjunto de teste: 7.295 clientes (20%, estratificado, nenhuma pessoa em comum com o treino), com
+124 maus pagadores. Corte de decisão de 0,5.
 
 | Modelo | Acurácia | Acurácia balanceada | Precisão | Recall | F1 | AUC-ROC |
 |---|---|---|---|---|---|---|
-| **XGBoost** | 0,8442 | **0,7250** | 0,0637 | 0,6016 | 0,1153 | **0,8164** |
-| Regressão Logística | 0,7696 | 0,7150 | 0,0471 | **0,6585** | 0,0879 | 0,7860 |
-| Random Forest | 0,8974 | 0,6602 | **0,0702** | 0,4146 | **0,1200** | 0,7691 |
-| Árvore de Decisão | 0,7770 | 0,6788 | 0,0432 | 0,5772 | 0,0803 | 0,7394 |
-| Baseline (sempre "bom") | 0,9831 | 0,5000 | 0,0000 | 0,0000 | 0,0000 | 0,5000 |
+| **XGBoost** | 0,8355 | 0,6905 | 0,0554 | 0,5403 | 0,1004 | **0,7965** |
+| Regressão Logística | 0,7740 | **0,7146** | 0,0480 | 0,6532 | 0,0895 | 0,7880 |
+| Random Forest | 0,9069 | 0,6238 | **0,0644** | 0,3306 | **0,1078** | 0,7497 |
+| Árvore de Decisão | 0,6458 | 0,6772 | 0,0334 | **0,7097** | 0,0638 | 0,7448 |
+| Baseline (sempre "bom") | 0,9830 | 0,5000 | 0,0000 | 0,0000 | 0,0000 | 0,5000 |
 
-Validação cruzada (5 folds, só no treino), AUC-ROC médio ± desvio:
+Intervalo de 95% do AUC-ROC no teste (bootstrap): XGBoost de 0,757 a 0,831; Regressão Logística de
+0,744 a 0,831.
 
-| Modelo | AUC-ROC |
-|---|---|
-| XGBoost | 0,831 ± 0,013 |
-| Random Forest | 0,813 ± 0,015 |
-| Regressão Logística | 0,805 ± 0,011 |
-| Árvore de Decisão | 0,755 ± 0,020 |
+Validação cruzada (5 folds por pessoa, só no treino), AUC-ROC médio ± desvio, e quanto ele subiria
+se a divisão ignorasse as pessoas repetidas:
 
-A validação cruzada e o teste ficam próximos (0,831 contra 0,816), sem sinal de overfitting.
+| Modelo | AUC-ROC (por pessoa) | AUC-ROC (por linha) | Otimismo |
+|---|---|---|---|
+| XGBoost | 0,796 ± 0,028 | 0,824 | +0,027 |
+| Regressão Logística | 0,785 ± 0,028 | 0,797 | +0,012 |
+| Random Forest | 0,748 ± 0,023 | 0,809 | +0,060 |
+| Árvore de Decisão | 0,737 ± 0,016 | 0,739 | +0,003 |
 
-**Modelo escolhido:** **XGBoost**. Tem o maior AUC-ROC tanto na validação cruzada quanto no teste e
-a maior acurácia balanceada. Também é o que melhor ordena os clientes por risco: revisando os **20%
-de pedidos mais arriscados, encontra 69,1% dos maus pagadores**, contra 20% de uma escolha
-aleatória.
+A validação cruzada e o teste ficam praticamente iguais (0,796 contra 0,797), sem sinal de
+overfitting. O Random Forest é o mais inflado pela divisão por linha, porque consegue "decorar" a
+combinação exata de idade, renda e tempo de emprego de cada pessoa.
+
+**Modelo escolhido:** **XGBoost**, por ter o maior AUC-ROC na validação cruzada, confirmado no
+teste. Revisando os **20% de pedidos mais arriscados, ele encontra 63,7% dos maus pagadores**,
+contra 20% de uma escolha aleatória. A **Regressão Logística fica tecnicamente empatada** (os
+intervalos se sobrepõem) e é a alternativa natural quando for preciso explicar cada decisão.
 
 **Métricas priorizadas:** **AUC-ROC** como principal e **recall** como secundária.
 
-- **Acurácia não serve:** com 98,31% de bons pagadores, o baseline que responde sempre "bom" tem
-  98,31% de acurácia e não encontra ninguém.
+- **Acurácia não serve:** com 98,3% de bons pagadores, o baseline que responde sempre "bom" tem
+  98,3% de acurácia e não encontra ninguém.
 - **AUC-ROC** mede se o modelo coloca os maus pagadores no topo do ranking, independentemente do
   corte escolhido. É exatamente o uso proposto (priorizar a análise).
 - **Recall** vem logo depois porque, em crédito, deixar passar um mau pagador (falso negativo,
@@ -188,20 +202,22 @@ Todas as métricas, tabelas e gráficos ficam em `results/metrics/` e `results/f
 ## 6. Principais conclusões
 
 1. **O modelo encontra os maus pagadores muito melhor que o acaso, mas deve priorizar a análise,
-   não decidir sozinho.** Revisar os 10% de pedidos mais arriscados já encontra metade dos maus
-   pagadores, e os 20% mais arriscados encontram 7 em cada 10. Por outro lado, a precisão é de
-   cerca de 6%: recusar automaticamente todo cliente marcado como risco negaria crédito a cerca de
-   15 bons pagadores para cada mau pagador evitado.
+   não decidir sozinho.** Revisar os 10% de pedidos mais arriscados já encontra 40% dos maus
+   pagadores (4 vezes o acaso), e os 20% mais arriscados encontram cerca de 6 em cada 10. Por outro
+   lado, a precisão é de cerca de 6%: recusar automaticamente todo cliente marcado como risco
+   negaria crédito a cerca de 17 bons pagadores para cada mau pagador evitado.
 2. **O histórico com o banco é o que mais prevê o risco.** As três variáveis mais importantes, com
    concordância entre permutation importance e SHAP, vêm do histórico:
    - **tempo de histórico:** mais meses aumentam o risco;
    - **meses com saldo quitado:** reduzem o risco;
    - **meses sem crédito em uso:** reduzem o risco.
 
-   Entre os dados cadastrais, idade e tempo de emprego maiores indicam risco menor.
-3. **Para solicitantes sem histórico, o modelo é bem mais fraco.** Treinado só com dados
-   cadastrais, o AUC-ROC cai de 0,816 para 0,658, e a captura nos 20% mais arriscados cai de 69% para
-   50%. Para clientes novos, o modelo precisa ser complementado por birôs de crédito externos.
+   Entre os dados cadastrais, tempo de emprego e renda maiores indicam risco menor, mas com peso
+   pequeno.
+3. **O modelo serve para quem já é cliente; o cadastro sozinho quase não prevê o risco.** Treinado
+   só com dados cadastrais, o AUC-ROC do XGBoost cai de 0,797 para 0,592 (os outros modelos ficam
+   entre 0,55 e 0,59, perto do sorteio), e a captura nos 20% mais arriscados cai de 64% para 37%.
+   Para solicitantes novos, a decisão precisa de birôs de crédito externos.
 4. **Nenhuma característica isolada define um mau pagador.** Todas as correlações individuais com
    o alvo ficam abaixo de 0,03 (exceto o tempo de histórico, com 0,10). O ganho vem da combinação de
    variáveis, o que justifica um modelo em vez de regras simples.
@@ -209,6 +225,8 @@ Todas as métricas, tabelas e gráficos ficam em `results/metrics/` e `results/f
    - o código `365243` em `DAYS_EMPLOYED` identifica aposentados sem vínculo (17% da base);
    - a ocupação é nula em 30,6% dos casos;
    - há 47 IDs duplicados com dados divergentes;
+   - a mesma pessoa aparece com vários IDs (36.457 contas de 9.728 pessoas), o que exigiu separar
+     treino e teste por pessoa;
    - uma feature com vazamento (correlação 1,0 com o alvo) foi identificada e removida.
 
 ### Limitações e próximos passos
@@ -219,6 +237,10 @@ Todas as métricas, tabelas e gráficos ficam em `results/metrics/` e `results/f
   passo: exigir um mínimo de meses de histórico ou normalizar pelo tempo de observação.
 - **Janela temporal:** features de histórico e alvo vêm do mesmo período. Em produção, as features
   deveriam ser calculadas antes de uma data de corte e o alvo medido depois dela.
+- **Identificação de pessoas:** o `grupo_cliente` junta IDs com cadastro 100% idêntico. Se a mesma
+  pessoa atualizou algum dado entre uma conta e outra, ela conta como duas pessoas.
+- **Amostra pequena:** 124 maus pagadores no teste. Diferenças de 0,01 no AUC-ROC entre modelos não
+  são significativas (ver os intervalos de confiança no notebook 04).
 - **Equidade:** `CODE_GENDER` influencia a previsão. Antes de qualquer uso real, é necessária uma
   auditoria de equidade (erros por gênero) e a avaliação de remover a variável.
 - **Corte de decisão e custos:** o corte de 0,5 é didático. Com os custos reais de um calote e de
