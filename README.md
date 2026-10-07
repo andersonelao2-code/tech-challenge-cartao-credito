@@ -17,9 +17,9 @@
 | Nome completo | RM | E-mail |
 |---|---|---|
 | Anderson Leão da Silva | RM377734 | andersonleao@bb.com.br |
-| Jessika Midory Fukuyama | RM123456 | je.fukuyama@gmail.com |
-| Leticia Nery Barbosa Dias | RM123456 | leticianerybd@gmail.com |
-| Pricilla Teixeira da Silva | RM123456 | pricillateixeira@bb.com.br |
+| Jessika Midory Fukuyama | RM377809 | je.fukuyama@gmail.com |
+| Leticia Nery Barbosa Dias | RM377749 | leticianerybd@gmail.com |
+| Pricilla Teixeira da Silva | RM377773 | pricillateixeira@bb.com.br |
 
 ---
 
