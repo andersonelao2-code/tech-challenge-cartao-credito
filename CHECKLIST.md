@@ -4,8 +4,8 @@ Rode esta lista antes de submeter.
 
 ## Acesso (causa nº 1 de problema na entrega)
 
-- [ ] Repositório **público** — confirmado em janela anônima
-- [ ] Vídeo abre sem pedir permissão — confirmado em janela anônima
+- [x] Repositório **público** — confirmado em janela anônima
+- [x] Vídeo abre sem pedir permissão — confirmado em janela anônima
 - [x] Apresentação abre e está em PDF
 
 ## Repositório
@@ -38,7 +38,7 @@ Rode esta lista antes de submeter.
 
 ## Apresentação e vídeo
 
-- [x] Apresentação em `docs/apresentacao_executiva.pdf`
+- [x] Apresentação em `docs/apresentacao_video_grupo12.pdf`
 - [x] Storytelling conecta os insights — não é uma sequência de gráficos
 - [ ] Vídeo com **≤ 5 minutos**
 - [ ] Ao menos um integrante aparece ou narra
@@ -46,6 +46,6 @@ Rode esta lista antes de submeter.
 
 ## Submissão
 
-- [ ] PDF com os três links gerado
-- [ ] Links do PDF idênticos aos do README
+- [x] PDF com os três links gerado
+- [x] Links do PDF idênticos aos do README
 - [ ] PDF enviado na plataforma

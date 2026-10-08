@@ -30,8 +30,8 @@ Estes três links são **obrigatórios** e devem ser idênticos aos do PDF de su
 | Item | Link |
 |---|---|
 | Repositório | <https://github.com/andersonelao2-code/tech-challenge-cartao-credito> |
-| Vídeo executivo (≤ 5 min) | _a definir_ |
-| Apresentação | <https://github.com/andersonelao2-code/tech-challenge-cartao-credito/blob/main/docs/apresentacao_executiva.pdf> |
+| Vídeo executivo (≤ 5 min) | <https://drive.google.com/file/d/1_43ickCRbePLVy5IpjC_-KAQMdxM7fkm/view> |
+| Apresentação | <https://github.com/andersonelao2-code/tech-challenge-cartao-credito/blob/main/docs/apresentacao_video_grupo12.pdf> |
 
 ---
 
