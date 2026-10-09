@@ -8,7 +8,7 @@
 
 | Campo | Valor |
 |---|---|
-| Turma | 12DTAT |
+| Turma | 2DTATBB |
 | Grupo | Grupo 12 |
 | Data de entrega | 08/10/2026 |
 

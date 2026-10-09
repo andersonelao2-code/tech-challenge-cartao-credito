@@ -45,6 +45,7 @@ PLACEHOLDERS = (
     "Nome Completo do Integrante",
     "RM000000",
     "Grupo 00",
+    "12DTAT",  # turma de exemplo do template
 )
 
 AZUL = colors.HexColor("#0B3C5D")
