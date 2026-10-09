@@ -38,10 +38,10 @@ Rode esta lista antes de submeter.
 
 ## Apresentação e vídeo
 
-- [x] Apresentação em `docs/apresentacao_video_grupo12.pdf`
+- [x] Apresentação em `docs/apresentacao_executiva.pdf`
 - [x] Storytelling conecta os insights — não é uma sequência de gráficos
-- [ ] Vídeo com **≤ 5 minutos**
-- [ ] Ao menos um integrante aparece ou narra
+- [x] Vídeo com **≤ 5 minutos**
+- [x] Ao menos um integrante aparece ou narra
 - [x] Linguagem executiva, sem jargão técnico
 
 ## Submissão
